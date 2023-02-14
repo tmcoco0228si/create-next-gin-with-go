@@ -8,8 +8,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var option string
-
 func newRootCmd(ui *rwi.RWI, args []string) *cobra.Command {
 
 	// ルートコマンド
@@ -22,23 +20,19 @@ func newRootCmd(ui *rwi.RWI, args []string) *cobra.Command {
 		},
 	}
 	rootCmd.SilenceUsage = true
-	rootCmd.SetArgs(args)            //コマンドの引数を設定
-	rootCmd.SetIn(ui.Reader())       //入力データのソースを設定
-	rootCmd.SetOut(ui.ErrorWriter()) //使用法メッセージの送信先を設定
-	rootCmd.SetErr(ui.ErrorWriter()) //エラーメッセージの送信先を設定
-	rootCmd.AddCommand(newCreateCmd(ui))//この親コマンドに 1 つまたは複数のコマンドを追加します。
+	rootCmd.SetArgs(args)                //コマンドの引数を設定
+	rootCmd.SetIn(ui.Reader())           //入力データのソースを設定
+	rootCmd.SetOut(ui.ErrorWriter())     //使用法メッセージの送信先を設定
+	rootCmd.SetErr(ui.ErrorWriter())     //エラーメッセージの送信先を設定
+	rootCmd.AddCommand(newCreateCmd(ui)) //サブコマンド追加
 
 	return rootCmd
 }
 
+// ルートコマンド作成・実行
 func Execute(ui *rwi.RWI, args []string) exitcode.ExitCode {
 	if err := newRootCmd(ui, args).Execute(); err != nil {
-		return exitcode.Abnormal
+		return exitcode.Abnormal //OS終了コード "異常"
 	}
-	return exitcode.Normal
+	return exitcode.Normal //OSの終了コード "正常"
 }
-
-// func init() {
-// 	//StringPと異なり、入力されたフラグを第一引数で直接使用することができる。
-// 	rootCmd.PersistentFlags().StringVar(&option, "option", "", "option")
-// }
