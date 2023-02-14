@@ -1,8 +1,8 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
-	"os"
 
 	"github.com/goark/gocli/rwi"
 	"github.com/spf13/cobra"
@@ -14,22 +14,23 @@ func newCreateCmd(ui *rwi.RWI) *cobra.Command {
 		Use:   "create",
 		Short: "createコマンドの後に引数やフラグを入力してください",
 		Long: `createコマンドの後に引数やフラグを入力してください
-					そうすればtypescriptのonoff, eslint,prettierのインストールするかどうか選べます`,
+					引数には「gin」「nextjs」と打ち込むことでGinのインストール、Next.jsのプロジェクト作成ができます。
+					「nextjs」のフラグでは「typescriptのon・off, eslint,prettier」のインストールするかどうか選べます。
+					詳しくは --hで詳細を確認してください。
+					`,
 		//インスタンスを内部関数を使って動的に生成
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// プログラム名を除いた引数を取得
-			if len(args) < 1 {
-				fmt.Println(args)
-				fmt.Println("引数を指定してください")
-				os.Exit(1) // 非正常終了
-			}
 
+			// プログラム名を除いた引数の要素数取得
+			if len(args) < 1 {
+				return errors.New("引数を入力してください")
+			}
 			if err := ui.Outputln("createCommand called"); err != nil {
 				ui.Outputln("失敗")
 				return err
 			}
 			switch args[0] {
-			case "nextjs": //引数が「next.js」だった場合、以下の条件判断
+			case "nextjs": //引数が「nextjs」だった場合、以下の条件判断
 				if typescript, _ := cmd.Flags().GetBool("typescript"); typescript == true {
 					fmt.Println("typescript on")
 				} else {
@@ -45,14 +46,13 @@ func newCreateCmd(ui *rwi.RWI) *cobra.Command {
 			case "gin":
 				fmt.Println("Gin install start")
 			default:
-				fmt.Println("引数に[nextjs]か[gin]と入力してください")
+				return errors.New("引数には、「gin」「nextjs」のいずれかを入力してください")
 			}
 			return nil
 		},
 	}
 
-	createCmd.Flags().String("nextjs", "n", "nextjs support")
-	createCmd.Flags().String("gin", "g", "gin support")
+	// Next.jsに関するフラグの設定
 	createCmd.Flags().BoolP("typescript", "t", false, "typescript support") //オプション:typescript
 	createCmd.Flags().BoolP("eslint", "e", false, "eslint support")         //オプション: eslint
 	createCmd.Flags().BoolP("prettier", "p", false, "prettier support")     //オプション: prettier

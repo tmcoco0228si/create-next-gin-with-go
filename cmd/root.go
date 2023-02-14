@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"fmt"
+	"errors"
 
 	"github.com/goark/gocli/exitcode"
 	"github.com/goark/gocli/rwi"
@@ -15,8 +15,9 @@ func newRootCmd(ui *rwi.RWI, args []string) *cobra.Command {
 		Use:   "nextjs-gin",
 		Short: "A brief description of your application",
 		Long:  `next-ginと記載すれば「next.js」と「gin」のインストールが開始されます`,
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("create")
+		RunE: func(cmd *cobra.Command, args []string) error {
+			//与えられたテキストをフォーマットし、エラーを返す。
+			return errors.New("サブコマンドを入力してください")
 		},
 	}
 	rootCmd.SilenceUsage = true
