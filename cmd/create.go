@@ -3,6 +3,8 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"os"
+	"os/exec"
 
 	"github.com/goark/gocli/rwi"
 	"github.com/spf13/cobra"
@@ -20,29 +22,35 @@ func newCreateCmd(ui *rwi.RWI) *cobra.Command {
 					`,
 		//インスタンスを内部関数を使って動的に生成
 		RunE: func(cmd *cobra.Command, args []string) error {
+			//バリデーションチェック
+			valiCmd(args)
 
-			// プログラム名を除いた引数の要素数取得
-			if len(args) < 1 {
-				return errors.New("引数を入力してください")
-			}
-			if err := ui.Outputln("createCommand called"); err != nil {
-				ui.Outputln("失敗")
-				return err
-			}
 			switch args[0] {
 			case "nextjs": //引数が「nextjs」だった場合、以下の条件判断
-				if typescript, _ := cmd.Flags().GetBool("typescript"); typescript == true {
-					fmt.Println("typescript on")
-				} else {
-					fmt.Println("typescript off")
+
+				name, _ := cmd.Flags().GetString("name")
+				tsFlg, _ := cmd.Flags().GetBool("typescript")
+
+				//実際のNext.jsプロジェクト作成 実行
+				err := createTP(name, tsFlg)
+
+				if err != nil {
+					fmt.Println("プロジェクト作成に失敗しました")
+					return err
 				}
-				if eslint, _ := cmd.Flags().GetBool("eslint"); eslint == true {
-					fmt.Println("eslint on")
+
+				//Next.jsプロジェクトを上位パスに移動
+				err = moveFolder(name)
+
+				if err != nil {
+					fmt.Println("Next.jsプロジェクトの移動に失敗しました")
+					return err
 				}
-				if prettier, _ := cmd.Flags().GetBool("prettier"); prettier == true {
-					fmt.Println("prittier on")
-				}
+
+				// eslint, _ := cmd.Flags().GetBool("eslint");
+				//  prettier, _ := cmd.Flags().GetBool("prettier");
 				fmt.Println("Next.js install start")
+
 			case "gin":
 				fmt.Println("Gin install start")
 			default:
@@ -51,10 +59,50 @@ func newCreateCmd(ui *rwi.RWI) *cobra.Command {
 			return nil
 		},
 	}
-
-	// Next.jsに関するフラグの設定
-	createCmd.Flags().BoolP("typescript", "t", false, "typescript support") //オプション:typescript
-	createCmd.Flags().BoolP("eslint", "e", false, "eslint support")         //オプション: eslint
-	createCmd.Flags().BoolP("prettier", "p", false, "prettier support")     //オプション: prettier
+	//フラグの作成
+	createFlg(createCmd)
 	return createCmd
+}
+
+// コマンドのバリデーションチェック
+func valiCmd(args []string) error {
+	// プログラム名を除いた引数の要素数取得
+	if len(args) < 1 {
+		return errors.New("引数を入力してください")
+	}
+	return nil
+}
+
+// typescript・nameの有無を判断し、プロジェクト作成実行
+func createTP(n string, f bool) error {
+	if f == true {
+		err := exec.Command("npx", "create-next-app", n, " --typescript").Run()
+		if err != nil {
+			return err
+		}
+	} else {
+		err := exec.Command("npx", "create-next-app", n).Run()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// フォルダ移動
+func moveFolder(n string) error {
+	if err := os.Rename("./"+n, "../"+n); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// フラグ作成
+func createFlg(createCmd *cobra.Command) {
+	// Next.jsに関するフラグの設定
+	createCmd.Flags().BoolP("typescript", "t", false, "typescript support")             //オプション:typescript
+	createCmd.Flags().BoolP("eslint", "e", false, "eslint support")                     //オプション: eslint
+	createCmd.Flags().BoolP("prettier", "p", false, "prettier support")                 //オプション: prettier
+	createCmd.Flags().StringP("name", "n", "sample-app", "give something name support") //オプション: nameオプション
 }
