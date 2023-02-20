@@ -25,7 +25,9 @@ func newCreateCmd(ui *rwi.RWI) *cobra.Command {
 			//バリデーションチェック
 			valiCmd(args)
 
-			switch args[0] {
+			f, _ := cmd.Flags().GetString("flameWork")
+
+			switch f {
 			case "nextjs": //引数が「nextjs」だった場合、以下の条件判断
 
 				name, _ := cmd.Flags().GetString("name")
@@ -38,6 +40,12 @@ func newCreateCmd(ui *rwi.RWI) *cobra.Command {
 					fmt.Println("プロジェクト作成に失敗しました")
 					return err
 				}
+				err = option(cmd)
+
+				if err != nil {
+					fmt.Println("オプションのインストールに失敗しました。")
+					return err
+				}
 
 				//Next.jsプロジェクトを上位パスに移動
 				err = moveFolder(name)
@@ -46,13 +54,13 @@ func newCreateCmd(ui *rwi.RWI) *cobra.Command {
 					fmt.Println("Next.jsプロジェクトの移動に失敗しました")
 					return err
 				}
-
-				// eslint, _ := cmd.Flags().GetBool("eslint");
-				//  prettier, _ := cmd.Flags().GetBool("prettier");
-				fmt.Println("Next.js install start")
-
 			case "gin":
-				fmt.Println("Gin install start")
+				//実際の処理実行
+				err := gin()
+				if err != nil {
+					fmt.Println("ginのインストールに失敗しました。")
+					return nil
+				}
 			default:
 				return errors.New("引数には、「gin」「nextjs」のいずれかを入力してください")
 			}
@@ -67,21 +75,26 @@ func newCreateCmd(ui *rwi.RWI) *cobra.Command {
 // コマンドのバリデーションチェック
 func valiCmd(args []string) error {
 	// プログラム名を除いた引数の要素数取得
-	if len(args) < 1 {
-		return errors.New("引数を入力してください")
+	if len(args) < 4 {
+		fmt.Println("引数を入力してください")
 	}
 	return nil
 }
 
 // typescript・nameの有無を判断し、プロジェクト作成実行
-func createTP(n string, f bool) error {
-	if f == true {
-		err := exec.Command("npx", "create-next-app", n, " --typescript").Run()
+func createTP(n string, t bool) error {
+	fmt.Println(n)
+	// UTF-8エンコードされたバイト列に変換
+	nBytes := []byte(n)
+	// UTF-8エンコードされたバイト列をstring型に変換
+	ns := string(nBytes)
+	if t == true {
+		err := exec.Command("npx", "create-next-app", ns, " --typescript").Run()
 		if err != nil {
 			return err
 		}
 	} else {
-		err := exec.Command("npx", "create-next-app", n).Run()
+		err := exec.Command("npx", "create-next-app", ns).Run()
 		if err != nil {
 			return err
 		}
@@ -101,8 +114,40 @@ func moveFolder(n string) error {
 // フラグ作成
 func createFlg(createCmd *cobra.Command) {
 	// Next.jsに関するフラグの設定
+	createCmd.Flags().StringP("flameWork", "f", "", "Framework name")
+	createCmd.Flags().StringP("name", "n", "sample-app", "give something name support") //オプション: nameオプション
 	createCmd.Flags().BoolP("typescript", "t", false, "typescript support")             //オプション:typescript
 	createCmd.Flags().BoolP("eslint", "e", false, "eslint support")                     //オプション: eslint
 	createCmd.Flags().BoolP("prettier", "p", false, "prettier support")                 //オプション: prettier
-	createCmd.Flags().StringP("name", "n", "sample-app", "give something name support") //オプション: nameオプション
+}
+
+// オプションインストール
+func option(cmd *cobra.Command) error {
+	e, _ := cmd.Flags().GetBool("eslint")
+	p, _ := cmd.Flags().GetBool("prettier")
+	//eslintのフラグが入力されている場合実行
+	if e != false {
+		err := exec.Command("yarn", "add", "-D", "eslint", "@typescript-eslint/eslint-plugin", "@typescript-eslint/parser").Run()
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	if p != false {
+		err := exec.Command("yarn", "add", "-D", "prettier", "eslint-config-prettier", "eslint-plugin-prettier").Run()
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	return nil
+}
+
+func gin() error {
+	err := exec.Command("go", "get", "-u", "github.com/gin-gonic/gin").Run()
+	if err != nil {
+		return err
+	}
+	return nil
 }

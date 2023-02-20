@@ -17,7 +17,7 @@ func newRootCmd(ui *rwi.RWI, args []string) *cobra.Command {
 		Long:  `next-ginと記載すれば「next.js」と「gin」のインストールが開始されます`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			//与えられたテキストをフォーマットし、エラーを返す。
-			return errors.New("サブコマンドを入力してください")
+			return errors.New("サブコマンド「create」を入力してください")
 		},
 	}
 	rootCmd.SilenceUsage = true
