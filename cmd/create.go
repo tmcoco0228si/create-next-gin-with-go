@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+//createコマンドの実装
 func newCreateCmd(ui *rwi.RWI) *cobra.Command {
 	// Next.jsのコマンド実装
 	var createCmd = &cobra.Command{
@@ -144,6 +145,7 @@ func option(cmd *cobra.Command) error {
 	return nil
 }
 
+// ginインストール
 func gin() error {
 	err := exec.Command("go", "get", "-u", "github.com/gin-gonic/gin").Run()
 	if err != nil {

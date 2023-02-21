@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+
 func newRootCmd(ui *rwi.RWI, args []string) *cobra.Command {
 
 	// ルートコマンド
